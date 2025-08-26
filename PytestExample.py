@@ -33,3 +33,27 @@ def test_process_portfolio(mocker):
     mock_api.assert_called_once_with()
     mock_db_instance.get_holdings.assert_called_once_with("2023-08-25")
     mock_api_instance.get_market_data.assert_called_once_with("2023-08-25")
+
+# ======================
+# investment.py
+from external_services import DatabaseClient, APIClient
+
+def process_portfolio(env, run_date):
+    db = DatabaseClient(env)
+    holdings = db.get_holdings(run_date)
+
+    api = APIClient()
+    try:
+        market_data = api.get_market_data(run_date)
+    except Exception as e:
+        # handle API failure gracefully
+        return {"error": str(e)}
+
+    result = []
+    for h in holdings:
+        price = market_data.get(h["ticker"], 0)
+        result.append({"ticker": h["ticker"], "value": h["quantity"] * price})
+
+    return result
+
+
