@@ -91,7 +91,6 @@ def dynamic_market_data(run_date):
 
 mock_api_instance.get_market_data.side_effect = dynamic_market_data
 
-
 # =================
 # Key Takeaways
 # side_effect = simulate exceptions or dynamic outputs.
