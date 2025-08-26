@@ -2,6 +2,33 @@
 import pytest
 from investment import process_portfolio
 
+# investment.py
+from external_services import DatabaseClient, APIClient, Logger
+
+def process_portfolio(env, run_date, debug=False):
+    # 1. Connect to database
+    db = DatabaseClient(env)
+    holdings = db.get_holdings(run_date)
+
+    # 2. Fetch market data
+    api = APIClient()
+    try:
+        market_data = api.get_market_data(run_date)
+    except Exception as e:
+        Logger.log_error(str(e))
+        return {"error": str(e)}
+
+    # 3. Compute portfolio values
+    result = []
+    for h in holdings:
+        price = market_data.get(h["ticker"], 0)
+        value = h["quantity"] * price
+        if debug:
+            Logger.log_info(f"{h['ticker']} value: {value}")
+        result.append({"ticker": h["ticker"], "value": value})
+
+    return result
+
 def test_process_portfolio(mocker):
     # Mock DatabaseClient class
     mock_db = mocker.patch("investment.DatabaseClient")
